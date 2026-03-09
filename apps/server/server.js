@@ -23,7 +23,7 @@ const db = knex({
     host: process.env.PGHOST || 'localhost',
     user: process.env.PGUSER || 'postgres',
     password: process.env.PGPASSWORD || 'postgres',
-    database: process.env.PGDATABASE || 'photoapp',
+    database: process.env.PGDATABASE || 'CaptureNest',
     port: process.env.PGPORT || 5433
   }
 });

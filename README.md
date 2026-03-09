@@ -1,4 +1,4 @@
-# PhotoApp 
+# CaptureNest 
 
 A modern, self-hosted photo and video capture application with a professional web interface. Built with React, Node.js, Express, PostgreSQL, and Docker.
 
@@ -64,7 +64,7 @@ A modern, self-hosted photo and video capture application with a professional we
 
 ### Project Structure
 ```
-photoapp/
+CaptureNest/
 ├── apps/
 │   ├── server/                      # Backend (Port 5000)
 │   │   ├── server.js               # Express server
@@ -120,8 +120,8 @@ photoapp/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourdudeken/photoapp.git
-   cd photoapp
+   git clone https://github.com/yourdudeken/CaptureNest.git
+   cd CaptureNest
    ```
 
 2. **Install dependencies**:
@@ -161,8 +161,8 @@ photoapp/
 docker-compose up --build -d
 
 # View logs
-docker logs -f photoapp-web-1
-docker logs -f photoapp-server-1
+docker logs -f CaptureNest-web-1
+docker logs -f CaptureNest-server-1
 
 # Stop all services
 docker-compose down
@@ -224,7 +224,7 @@ PORT=5000
 PGHOST=localhost
 PGUSER=postgres
 PGPASSWORD=postgres
-PGDATABASE=photoapp
+PGDATABASE=CaptureNest
 PGPORT=5433
 
 # Database Configuration (Docker Production)
@@ -451,7 +451,7 @@ If camera or microphone doesn't work:
 **404 Not Found (for uploaded media):**
 - Refresh the browser (hard refresh: Ctrl+Shift+R)
 - Clear browser cache
-- Check that files exist: `docker exec photoapp-server-1 ls -lh /media/`
+- Check that files exist: `docker exec CaptureNest-server-1 ls -lh /media/`
 - Restart server: `docker-compose restart server`
 
 ### Database Connection Issues
@@ -467,21 +467,21 @@ docker-compose logs db
 docker-compose restart db
 
 # Connect to database
-docker exec -it photoapp-db-1 psql -U postgres -d photoapp
+docker exec -it CaptureNest-db-1 psql -U postgres -d CaptureNest
 ```
 
 ### File System Issues
 
 ```bash
 # Check media directory
-docker exec photoapp-server-1 ls -lh /media/
+docker exec CaptureNest-server-1 ls -lh /media/
 
 # Check volume
-docker volume inspect photoapp_media
+docker volume inspect CaptureNest_media
 
 # Create media directory if missing
-docker exec photoapp-server-1 mkdir -p /media
-docker exec photoapp-server-1 chmod 755 /media
+docker exec CaptureNest-server-1 mkdir -p /media
+docker exec CaptureNest-server-1 chmod 755 /media
 ```
 
 ##  Security Features
@@ -550,7 +550,7 @@ docker-compose up --build -d
 
 ```bash
 # Access database
-docker exec -it photoapp-db-1 psql -U postgres -d photoapp
+docker exec -it CaptureNest-db-1 psql -U postgres -d CaptureNest
 
 # Run SQL commands
 \dt                    # List tables
@@ -558,10 +558,10 @@ docker exec -it photoapp-db-1 psql -U postgres -d photoapp
 SELECT * FROM users;  # Query users
 
 # Backup database
-docker exec photoapp-db-1 pg_dump -U postgres photoapp > backup.sql
+docker exec CaptureNest-db-1 pg_dump -U postgres CaptureNest > backup.sql
 
 # Restore database
-docker exec -i photoapp-db-1 psql -U postgres photoapp < backup.sql
+docker exec -i CaptureNest-db-1 psql -U postgres CaptureNest < backup.sql
 ```
 
 ##  License

@@ -6,19 +6,19 @@ services:
     depends_on:
       - server
     networks:
-      - photoapp-network
+      - CaptureNest-network
 
   server:
     build: ./apps/server
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/photoapp
+      DATABASE_URL: postgres://postgres:postgres@db:5432/CaptureNest
       STORAGE_TYPE: local
       LOCAL_MEDIA_PATH: /media
       # Database connection for Docker internal network
       PGHOST: db
       PGUSER: postgres
       PGPASSWORD: postgres
-      PGDATABASE: photoapp
+      PGDATABASE: CaptureNest
       PGPORT: 5432
       # JWT secrets
       JWT_SECRET: 55f2b35553327ef6fa0a4518bcda0065795d5595d8d4f91ad4d6d52ef7ae16ab
@@ -32,14 +32,14 @@ services:
     depends_on:
       - db
     networks:
-      - photoapp-network
+      - CaptureNest-network
 
   db:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: photoapp
+      POSTGRES_DB: CaptureNest
     ports:
       - "5433:5432"
     volumes:
@@ -47,7 +47,7 @@ services:
       # Automatically initialize the schema
       - ./apps/server/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
-      - photoapp-network
+      - CaptureNest-network
 
 volumes:
   dbdata:
@@ -55,5 +55,5 @@ volumes:
 
 
 networks:
-  photoapp-network:
+  CaptureNest-network:
     driver: bridge

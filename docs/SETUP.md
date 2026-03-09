@@ -1,4 +1,4 @@
-# PhotoApp Development Setup
+# CaptureNest Development Setup
 
 ## Quick Start
 
@@ -25,10 +25,10 @@ docker-compose up db -d
 Make sure PostgreSQL is installed and running, then create the database:
 ```bash
 # Create database
-createdb photoapp
+createdb CaptureNest
 
 # Run schema
-psql -d photoapp -f apps/server/db/schema.sql
+psql -d CaptureNest -f apps/server/db/schema.sql
 ```
 
 ### 3. Configure Environment Variables
@@ -40,7 +40,7 @@ PORT=5000
 PGHOST=localhost
 PGUSER=postgres
 PGPASSWORD=postgres
-PGDATABASE=photoapp
+PGDATABASE=CaptureNest
 STORAGE_TYPE=local
 LOCAL_MEDIA_PATH=./media
 JWT_SECRET=55f2b35553327ef6fa0a4518bcda0065795d5595d8d4f91ad4d6d52ef7ae16ab
@@ -85,7 +85,7 @@ npm run build --workspace=web
 
 ### Project Structure
 ```
-photoapp/
+CaptureNest/
 ├── apps/
 │   ├── server/          # Backend (Express + PostgreSQL)
 │   │   ├── db/

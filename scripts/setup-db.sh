@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# PhotoApp Database Setup Script
+# CaptureNest Database Setup Script
 
-echo "  Setting up PhotoApp Database..."
+echo "  Setting up CaptureNest Database..."
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
@@ -25,7 +25,7 @@ if docker-compose ps db | grep -q "Up"; then
     echo "Database connection details:"
     echo "  Host: localhost"
     echo "  Port: 5432"
-    echo "  Database: photoapp"
+    echo "  Database: CaptureNest"
     echo "  User: postgres"
     echo "  Password: postgres"
     echo ""

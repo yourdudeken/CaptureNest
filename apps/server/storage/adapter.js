@@ -23,7 +23,7 @@ async function saveFileLocal(fileBuffer, filename) {
 }
 
 async function saveFileS3(fileBuffer, filename, contentType) {
-  const bucket = process.env.S3_BUCKET || 'photoapp';
+  const bucket = process.env.S3_BUCKET || 'CaptureNest';
   await s3.putObject({ Bucket: bucket, Key: filename, Body: fileBuffer, ContentType: contentType }).promise();
   return { storage: 's3', key: filename };
 }

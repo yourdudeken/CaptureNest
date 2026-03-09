@@ -61,7 +61,7 @@ const Settings = ({ onLogout }) => { // Accept onLogout prop
             </div>
 
             <div className="app-version">
-                v1.0.0 • PhotoApp
+                v1.0.0 • CaptureNest
             </div>
         </div>
     );

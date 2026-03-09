@@ -55,7 +55,7 @@ function AppContent() {
             <span className="page-title">
               {location.pathname === '/' ? 'Home' :
                 location.pathname === '/gallery' ? 'Albums' :
-                  location.pathname === '/settings' ? 'Settings' : 'PhotoApp'}
+                  location.pathname === '/settings' ? 'Settings' : 'CaptureNest'}
             </span>
           </div>
           <div className="top-bar-right">
