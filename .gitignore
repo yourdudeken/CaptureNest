@@ -1,9 +1,28 @@
+# Node
 node_modules/
-.env
-*.log
-.DS_Store
-apps/server/media/*
-!apps/server/media/.gitkeep
-build/
 dist/
-.cache/
+build/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Database & media (local dev)
+*.db
+*.db-shm
+*.db-wal
+server/media/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp

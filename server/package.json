@@ -1,0 +1,41 @@
+{
+  "name": "capturenest-server",
+  "version": "1.0.0",
+  "description": "CaptureNest API server",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "node -r ts-node/register src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/static": "^7.0.4",
+    "@qdrant/js-client-rest": "^1.9.0",
+    "axios": "^1.6.8",
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.26.2",
+    "fluent-ffmpeg": "^2.1.3",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.2.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "sharp": "^0.33.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/fs-extra": "^11.0.4",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.12.7",
+    "@types/node-cron": "^3.0.11",
+    "@types/uuid": "^9.0.8",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
