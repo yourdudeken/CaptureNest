@@ -46,27 +46,27 @@ CaptureNest is a **production-ready, self-hosted** AI media server. Point it at 
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    Web Dashboard (React)                  │
+│                   Web Dashboard (React)                  │
 │   Dashboard │ Camera │ Library │ AI Search │ Settings    │
 └─────────────────────┬────────────────────────────────────┘
                       │ HTTP (Vite proxy / nginx)
 ┌─────────────────────▼────────────────────────────────────┐
-│               CaptureNest API (Fastify/TypeScript)        │
+│              CaptureNest API (Fastify/TypeScript)        │
 │                                                          │
-│  ┌─────────────┐ ┌────────────┐ ┌────────────────────┐  │
-│  │  Camera Svc │ │ Media Svc  │ │  AI Pipeline       │  │
-│  │  (FFmpeg)   │ │  (sharp)   │ │  Ollama → Qdrant   │  │
-│  └─────────────┘ └────────────┘ └────────────────────┘  │
+│  ┌─────────────┐ ┌────────────┐ ┌────────────────────┐   │
+│  │  Camera Svc │ │ Media Svc  │ │  AI Pipeline       │   │
+│  │  (FFmpeg)   │ │  (sharp)   │ │  Ollama → Qdrant   │   │
+│  └─────────────┘ └────────────┘ └────────────────────┘   │
 │                                                          │
-│  ┌──────────────────────────┐  ┌─────────────────────┐  │
-│  │   SQLite (metadata)      │  │  Local Filesystem   │  │
-│  └──────────────────────────┘  └─────────────────────┘  │
+│  ┌──────────────────────────┐  ┌─────────────────────┐   │
+│  │   SQLite (metadata)      │  │  Local Filesystem   │   │
+│  └──────────────────────────┘  └─────────────────────┘   │
 └──────────────────────────────────────────────────────────┘
-         │                              │
-┌────────▼────────┐           ┌─────────▼──────────┐
-│  Ollama Server   │           │  Qdrant Vector DB  │
-│  (LLaVA model)  │           │  (semantic search) │
-└─────────────────┘           └────────────────────┘
+         │                                      │
+┌────────▼────────┐                   ┌─────────▼──────────┐
+│  Ollama Server  │                   │  Qdrant Vector DB  │
+│  (LLaVA model)  │                   │  (semantic search) │
+└─────────────────┘                   └────────────────────┘
 ```
 
 ---
