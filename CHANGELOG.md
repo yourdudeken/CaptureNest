@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/yourdudeken/CaptureNest/compare/v1.0.0...v1.1.0) (2026-03-10)
+
+
+### Features
+
+* Consolidate web and server Dockerfiles into a single monorepo Dockerfile and update CI/CD to build a unified image. ([fe2ca4a](https://github.com/yourdudeken/CaptureNest/commit/fe2ca4a520fa245a344c3d21fe0fbef9349fb68c))
+
 # 1.0.0 (2026-03-10)
 
 

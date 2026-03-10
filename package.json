@@ -1,6 +1,6 @@
 {
   "name": "capturenest",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI-powered self-hosted camera and media capture server",
   "private": true,
   "workspaces": [
