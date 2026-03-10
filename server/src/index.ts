@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import fs from 'fs';
 import path from 'path';
 import { initDatabase } from './db/database';
 import { initQdrant } from './services/ai/qdrantService';
@@ -45,6 +46,29 @@ async function bootstrap() {
     prefix: '/media/',
     decorateReply: false,
   });
+
+  // Serve Web UI if built (turns CaptureNest into a monolith)
+  const webDist = process.env.WEB_DIST_PATH 
+    ? path.resolve(process.env.WEB_DIST_PATH) 
+    : path.resolve(__dirname, '../../web/dist');
+
+  if (fs.existsSync(webDist)) {
+    await app.register(async (instance) => {
+      await instance.register(fastifyStatic, {
+        root: webDist,
+        prefix: '/',
+        wildcard: false, // Turn off wildcard so we can handle SPA fallback
+      });
+
+      instance.setNotFoundHandler((request, reply) => {
+        if (request.url.startsWith('/api') || request.url.startsWith('/media')) {
+          reply.status(404).send({ error: 'Not Found' });
+        } else {
+          reply.sendFile('index.html');
+        }
+      });
+    });
+  }
 
   // ── Initialise services ────────────────────────────────────────
   await ensureMediaDirs();

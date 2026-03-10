@@ -6,23 +6,10 @@
 
 services:
 
-  # ── React frontend (nginx) ──────────────────────────────────────
-  capturenest-web:
+  # ── CaptureNest Monolith (Web + API) ────────────────────────────
+  capturenest:
     build:
-      context: ./web
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - capturenest-api
-    networks:
-      - capturenest-net
-    restart: unless-stopped
-
-  # ── Fastify API server ──────────────────────────────────────────
-  capturenest-api:
-    build:
-      context: ./server
+      context: .
       dockerfile: Dockerfile
     ports:
       - "4000:4000"
@@ -34,10 +21,10 @@ services:
       MEDIA_PATH:      "/media"
       OLLAMA_URL:      "http://ollama:11434"
       OLLAMA_MODEL:    "${OLLAMA_MODEL:-llava}"
-      EMBED_MODEL:      "${EMBED_MODEL:-nomic-embed-text}"
+      EMBED_MODEL:     "${EMBED_MODEL:-nomic-embed-text}"
       EMBED_DIMENSIONS: "768"
       QDRANT_URL:      "http://qdrant:6333"
-      CORS_ORIGIN:     "http://localhost:3000"
+      CORS_ORIGIN:     "http://localhost:4000"
       LOG_LEVEL:       "info"
     volumes:
       - media:/media
@@ -49,7 +36,7 @@ services:
       - capturenest-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/settings/health"]
       interval: 30s
       timeout:  10s
       retries:  3
