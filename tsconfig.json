@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true
+  },
+  "references": [
+    { "path": "./server" },
+    { "path": "./web" }
+  ]
+}

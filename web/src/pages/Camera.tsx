@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
-  Camera, Video, FlipHorizontal, Square, Loader2,
+  Video, FlipHorizontal, Square, Loader2,
   CheckCircle2, AlertCircle, Circle, X
 } from 'lucide-react';
 import { captureApi } from '../lib/api';
