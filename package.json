@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=web\" --names \"api,web\" --prefix-colors \"cyan,magenta\"",
     "build": "npm run build --workspace=server && npm run build --workspace=web",
-    "start": "npm run start --workspace=server"
+    "start": "npm run start --workspace=server",
+    "test": "echo \"No tests specified yet\" && exit 0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,0 +1,126 @@
+name: CD Pipeline
+
+# Execute on push to the `main` branch when critical files change
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'server/**'
+      - 'web/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/cd.yml'
+      - '.releaserc.json'
+
+permissions:
+  contents: write # needed by semantic-release to create tags, generate changelog, and push
+  packages: write # needed to push images to ghcr.io
+  issues: write   # needed by semantic-release to comment
+  pull-requests: write # needed by semantic-release to close/comment PRs
+
+jobs:
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Semantic Release requires full git history to determine versions
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Semantic Release Action
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/exec
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-build-push:
+    name: Build & Push Docker Images
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        # Requires DOCKERHUB_USERNAME and DOCKERHUB_TOKEN configured in GitHub Repo Secrets
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─── API IMAGE ────────────────────────────────────────────────────────
+      - name: Extract metadata for API Image
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            yourdudeken/capturenest
+            ghcr.io/${{ github.repository }}/api
+          tags: |
+            type=raw,value=api-latest
+            type=raw,value=api-v${{ needs.release.outputs.new_release_version }}
+
+      - name: Build and Push API Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ─── WEB IMAGE ────────────────────────────────────────────────────────
+      - name: Extract metadata for Web Image
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            yourdudeken/capturenest
+            ghcr.io/${{ github.repository }}/web
+          tags: |
+            type=raw,value=web-latest
+            type=raw,value=web-v${{ needs.release.outputs.new_release_version }}
+
+      - name: Build and Push Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
