@@ -80,6 +80,7 @@ export interface AppSettings {
 
 /** Qdrant point payload */
 export interface QdrantPayload {
+  [key: string]: unknown;
   mediaId: string;
   description: string;
   tags: string[];

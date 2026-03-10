@@ -1,8 +1,8 @@
 {
+  "files": [],
   "compilerOptions": {
-    "jsx": "react-jsx",
     "moduleResolution": "bundler",
-    "esModuleInterop": true
+    "jsx": "react-jsx"
   },
   "references": [
     { "path": "./server" },
