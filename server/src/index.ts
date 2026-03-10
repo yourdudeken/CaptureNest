@@ -3,7 +3,6 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
-import fs from 'fs';
 import path from 'path';
 import { initDatabase } from './db/database';
 import { initQdrant } from './services/ai/qdrantService';
@@ -47,29 +46,6 @@ async function bootstrap() {
     decorateReply: false,
   });
 
-  // Serve Web UI if built (turns CaptureNest into a monolith)
-  const webDist = process.env.WEB_DIST_PATH 
-    ? path.resolve(process.env.WEB_DIST_PATH) 
-    : path.resolve(__dirname, '../../web/dist');
-
-  if (fs.existsSync(webDist)) {
-    await app.register(async (instance) => {
-      await instance.register(fastifyStatic, {
-        root: webDist,
-        prefix: '/',
-        wildcard: false, // Turn off wildcard so we can handle SPA fallback
-      });
-
-      instance.setNotFoundHandler((request, reply) => {
-        if (request.url.startsWith('/api') || request.url.startsWith('/media')) {
-          reply.status(404).send({ error: 'Not Found' });
-        } else {
-          reply.sendFile('index.html');
-        }
-      });
-    });
-  }
-
   // ── Initialise services ────────────────────────────────────────
   await ensureMediaDirs();
   initDatabase();
@@ -81,6 +57,22 @@ async function bootstrap() {
   await app.register(searchRoutes,  { prefix: '/api/search' });
   await app.register(cameraRoutes,  { prefix: '/api/camera' });
   await app.register(settingsRoutes,{ prefix: '/api/settings' });
+
+  // Serve React frontend in production
+  if (process.env.NODE_ENV === 'production') {
+    app.log.info('Serving packaged frontend UI from /dist/public');
+    const publicPath = path.resolve(__dirname, 'public');
+    // Ensure we don't conflict with the /media router
+    await app.register(fastifyStatic, {
+      root: publicPath,
+      decorateReply: false,
+    });
+    
+    // SPA catch-all
+    app.setNotFoundHandler((req, res) => {
+      res.sendFile('index.html', publicPath);
+    });
+  }
 
   // Health check
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));

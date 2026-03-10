@@ -1,56 +1,51 @@
-# ─── Builder Stage ───
-FROM node:20-alpine AS builder
-
-# Required for some native deps
-RUN apk add --no-cache python3 make g++
-
+# ── Stage 1: Build the API server (TypeScript) ──
+FROM node:20-alpine AS api-build
 WORKDIR /app
-
-# 1. Copy root and workspace definitions
-COPY package*.json tsconfig.json ./
-COPY server/package*.json server/
-COPY web/package*.json web/
-
-# 2. Clean install all workspaces
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY web/package.json ./web/
 RUN npm ci
 
-# 3. Copy source files
-COPY server/ server/
-COPY web/ web/
+COPY server/ ./server/
+COPY tsconfig.json ./
+RUN npm run build --workspace=server
 
-# 4. Build both frontend and backend
-RUN npm run build --workspaces
+# ── Stage 2: Build the Web dashboard (Vite/React) ──
+FROM node:20-alpine AS web-build
+WORKDIR /app
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY web/package.json ./web/
+RUN npm ci
 
+COPY web/ ./web/
+COPY tsconfig.json ./
+RUN npm run build --workspace=web
 
-# ─── Production Stage ───
+# ── Stage 3: Production Image (Combined) ──
+# We use a base Node 20 image (with FFmpeg) to run the Fastify API.
+# The React static files are bundled inside the API container and served by Fastify.
 FROM node:20-alpine
-
-# FFmpeg is required for the application's video recording services
-RUN apk add --no-cache ffmpeg
-
 WORKDIR /app
 
-# 1. Copy package files
-COPY package*.json ./
-COPY server/package*.json server/
+# Install FFmpeg (required for video/RTSP recording)
+RUN apk add --no-cache ffmpeg
 
-# 2. Production install strictly for the server (the front end is static)
+# Copy production dependencies configuration
+COPY package*.json ./
+COPY server/package.json ./server/
 RUN npm ci --omit=dev --workspace=server
 
-# 3. Copy compiled node backend logic
-COPY --from=builder /app/server/dist ./server/dist
+# Copy compiled API code
+COPY --from=api-build /app/server/dist ./server/dist
 
-# 4. Copy the compiled Vite frontend application
-COPY --from=builder /app/web/dist ./web/dist
+# Copy compiled Web dashboard into the API's public serving directory
+COPY --from=web-build /app/web/dist ./server/dist/public
 
-# 5. Runtime environment variables
-WORKDIR /app/server
+# Setup shared environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOST=0.0.0.0
-ENV WEB_DIST_PATH=../web/dist
 
 EXPOSE 4000
-
-# Fire it up
-CMD ["npm", "start"]
+CMD ["npm", "start", "--workspace=server"]
