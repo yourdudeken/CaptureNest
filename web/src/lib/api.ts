@@ -125,8 +125,6 @@ export const cameraApi = {
     api.delete(`/camera/${id}`),
 };
 
-// ── Settings ──────────────────────────────────────────────────────────────────
-
 export const settingsApi = {
   get: () =>
     api.get<Record<string, string>>('/settings'),
@@ -139,6 +137,25 @@ export const settingsApi = {
 
   models: () =>
     api.get<{ models: string[] }>('/settings/models'),
+};
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+export const authApi = {
+  status: () =>
+    api.get<{ isSetup: boolean }>('/auth/status'),
+
+  setup: (payload: { username: string; password: string }) =>
+    api.post<{ success: boolean; user: { id: string; username: string } }>('/auth/setup', payload),
+
+  login: (payload: { username: string; password: string }) =>
+    api.post<{ success: boolean; user: { id: string; username: string } }>('/auth/login', payload),
+
+  logout: () =>
+    api.post<{ success: boolean }>('/auth/logout'),
+
+  me: () =>
+    api.get<{ user: { id: string; username: string } }>('/auth/me'),
 };
 
 export default api;
