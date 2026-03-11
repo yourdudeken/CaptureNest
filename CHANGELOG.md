@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/yourdudeken/CaptureNest/compare/v1.1.0...v1.1.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* remove qdrant healthcheck requirement for local deployment ([5a7dd84](https://github.com/yourdudeken/CaptureNest/commit/5a7dd841e798db0964838ddaeb0ef251287fc365))
+* resolve frontend routing handler conflict and update video upload endpoint to handle webm properly ([5652ae3](https://github.com/yourdudeken/CaptureNest/commit/5652ae3a928973d0a760a463443e0646f9656a46))
+
 # [1.1.0](https://github.com/yourdudeken/CaptureNest/compare/v1.0.0...v1.1.0) (2026-03-10)
 
 
