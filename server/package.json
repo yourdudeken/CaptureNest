@@ -1,6 +1,6 @@
 {
   "name": "capturenest-server",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "CaptureNest API server",
   "main": "dist/index.js",
   "scripts": {

@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/yourdudeken/CaptureNest/compare/v1.3.0...v1.3.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* **auth:** downgrade fastify-jwt to v8, disable secure cookie for homelab http, fix healthcheck ipv6 ([fcf5c8d](https://github.com/yourdudeken/CaptureNest/commit/fcf5c8d51b991f28d11d823416b3c780ea7d3ea6))
+
 # [1.3.0](https://github.com/yourdudeken/CaptureNest/compare/v1.2.0...v1.3.0) (2026-03-11)
 
 
