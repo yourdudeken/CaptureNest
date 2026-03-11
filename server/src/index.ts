@@ -9,7 +9,11 @@ import { initDatabase } from './db/database';
 import { initQdrant } from './services/ai/qdrantService';
 import { ensureMediaDirs } from './services/media/mediaService';
 
+import fastifyJwt from '@fastify/jwt';
+import fastifyCookie from '@fastify/cookie';
+
 // Routes
+import authRoutes from './api/routes/authRoutes';
 import captureRoutes from './api/routes/captureRoutes';
 import mediaRoutes from './api/routes/mediaRoutes';
 import searchRoutes from './api/routes/searchRoutes';
@@ -39,6 +43,16 @@ async function bootstrap() {
     limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE || '524288000', 10) }, // 500MB
   });
 
+  await app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'super-secret-capture-nest-token_change-me',
+    cookie: {
+      cookieName: 'token',
+      signed: false,
+    },
+  });
+
+  await app.register(fastifyCookie);
+
   // Serve captured media files statically
   const mediaRoot = path.resolve(process.env.MEDIA_PATH || './media');
   await app.register(fastifyStatic, {
@@ -53,11 +67,24 @@ async function bootstrap() {
   await initQdrant();
 
   // ── API routes ─────────────────────────────────────────────────
-  await app.register(captureRoutes, { prefix: '/api/capture' });
-  await app.register(mediaRoutes,   { prefix: '/api/media' });
-  await app.register(searchRoutes,  { prefix: '/api/search' });
-  await app.register(cameraRoutes,  { prefix: '/api/camera' });
-  await app.register(settingsRoutes,{ prefix: '/api/settings' });
+  await app.register(authRoutes, { prefix: '/api/auth' });
+
+  await app.register(async (api) => {
+    // Validate JWT token cookie or authorization header in all these routes
+    api.addHook('onRequest', async (request, reply) => {
+      try {
+        await request.jwtVerify();
+      } catch (err) {
+        return reply.code(401).send({ error: 'Unauthorized user. Please login.' });
+      }
+    });
+
+    api.register(captureRoutes, { prefix: '/capture' });
+    api.register(mediaRoutes,   { prefix: '/media' });
+    api.register(searchRoutes,  { prefix: '/search' });
+    api.register(cameraRoutes,  { prefix: '/camera' });
+    api.register(settingsRoutes,{ prefix: '/settings' });
+  }, { prefix: '/api' });
 
   // Serve React frontend in production
   if (process.env.NODE_ENV === 'production') {

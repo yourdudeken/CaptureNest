@@ -8,9 +8,11 @@ import {
   Settings,
   Aperture,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuth } from '../lib/AuthContext';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -22,6 +24,7 @@ const navItems = [
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(true);
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface relative">
@@ -85,7 +88,7 @@ export default function Layout() {
 
           {/* Footer */}
           <div className="p-4 border-t border-surface-border shrink-0 bg-surface-elevated">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-slow shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                 <span className="text-xs font-medium text-gray-400">System online</span>
@@ -97,6 +100,25 @@ export default function Layout() {
                 title="Collapse sidebar"
               >
                 <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* User Profile / Logout */}
+            <div className="flex items-center justify-between pt-3 border-t border-surface-border/50">
+              <div className="flex items-center gap-2 overflow-hidden pr-2">
+                <div className="w-7 h-7 uppercase rounded-full bg-brand-600/20 text-brand-400 flex items-center justify-center text-xs font-bold shrink-0">
+                  {user?.username?.[0] || 'A'}
+                </div>
+                <div className="truncate">
+                  <p className="text-xs font-semibold text-white truncate">{user?.username || 'Admin'}</p>
+                </div>
+              </div>
+              <button 
+                onClick={logout}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                title="Log out"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>

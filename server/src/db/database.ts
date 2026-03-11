@@ -40,6 +40,14 @@ export function getDb(): Database.Database {
 
 function runMigrations(database: Database.Database): void {
   database.exec(`
+    -- Users table for authentication
+    CREATE TABLE IF NOT EXISTS users (
+      id             TEXT PRIMARY KEY,
+      username       TEXT UNIQUE NOT NULL,
+      password_hash  TEXT NOT NULL,
+      created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- Media metadata table
     CREATE TABLE IF NOT EXISTS media (
       id             TEXT PRIMARY KEY,
