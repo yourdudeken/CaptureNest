@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/yourdudeken/CaptureNest/compare/v1.2.0...v1.3.0) (2026-03-11)
+
+
+### Features
+
+* **auth:** implement initial setup and JWT login flow using fastify cookies and react context ([8e82141](https://github.com/yourdudeken/CaptureNest/commit/8e8214183b1d3b895adccc7b91082749a5d599c0))
+
 # [1.2.0](https://github.com/yourdudeken/CaptureNest/compare/v1.1.1...v1.2.0) (2026-03-11)
 
 
