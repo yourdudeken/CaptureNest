@@ -40,7 +40,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
+        secure: false // Homelabs usually use HTTP IP addresses
       })
       .send({ success: true, user: { id, username } });
   });
@@ -65,7 +65,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
+        secure: false // Homelabs usually use HTTP IP addresses
       })
       .send({ success: true, user: { id: user.id, username: user.username } });
   });
