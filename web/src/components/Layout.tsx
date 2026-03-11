@@ -104,18 +104,22 @@ export default function Layout() {
       </aside>
 
       {/* ── Main content ── */}
-      <main className="flex-1 overflow-y-auto relative flex flex-col bg-surface w-full h-full">
-        {/* Toggle floating button (appears when closed or on mobile) */}
+      <main className="flex-1 overflow-hidden relative flex flex-col bg-surface w-full h-full">
+        {/* Toggle header (appears when closed or on mobile) */}
         {!isOpen && (
-          <button
-            onClick={() => setIsOpen(true)}
-            className="absolute top-4 left-4 z-30 p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-gray-300 hover:text-white hover:bg-brand-600/20 hover:border-brand-500/50 transition-all shadow-xl backdrop-blur-md"
-            title="Open Menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex-none p-4 pb-0 z-30">
+            <button
+              onClick={() => setIsOpen(true)}
+              className="p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-gray-300 hover:text-white hover:bg-brand-600/20 hover:border-brand-500/50 transition-all shadow-sm"
+              title="Open Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         )}
-        <Outlet />
+        <div className="flex-1 overflow-y-auto relative w-full h-full">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

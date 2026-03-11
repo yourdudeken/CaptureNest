@@ -134,7 +134,7 @@ export default function Camera() {
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   return (
-    <div className="flex h-screen bg-black relative overflow-hidden">
+    <div className="flex h-full w-full bg-black relative overflow-hidden">
       {/* Live Preview */}
       <div className="flex-1 relative flex items-center justify-center">
         {error ? (
