@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/yourdudeken/CaptureNest/compare/v1.1.1...v1.2.0) (2026-03-11)
+
+
+### Features
+
+* add app favicon and make sidebar responsive with open/close toggling state ([e25d615](https://github.com/yourdudeken/CaptureNest/commit/e25d615b48096cb72aebc7afc868b21a5e21e6e2))
+
 ## [1.1.1](https://github.com/yourdudeken/CaptureNest/compare/v1.1.0...v1.1.1) (2026-03-11)
 
 
