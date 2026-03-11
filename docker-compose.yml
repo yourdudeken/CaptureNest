@@ -31,8 +31,7 @@ services:
       - media:/media
       - dbdata:/data
     depends_on:
-      qdrant:
-        condition: service_healthy
+      - qdrant
     networks:
       - capturenest-net
     restart: unless-stopped
@@ -45,7 +44,7 @@ services:
 
   # ── Ollama (local AI / LLM inference) ──────────────────────────
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.1.33
     ports:
       - "11434:11434"
     volumes:
@@ -73,12 +72,7 @@ services:
     networks:
       - capturenest-net
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:6333/"]
-      interval: 15s
-      timeout:  5s
-      retries:  5
-      start_period: 10s
+
 
 # ── Named volumes ──────────────────────────────────────────────────
 volumes:
