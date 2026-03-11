@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
+import fs from 'fs';
 import { initDatabase } from './db/database';
 import { initQdrant } from './services/ai/qdrantService';
 import { ensureMediaDirs } from './services/media/mediaService';
@@ -70,7 +71,8 @@ async function bootstrap() {
     
     // SPA catch-all
     app.setNotFoundHandler((req, res) => {
-      res.sendFile('index.html', publicPath);
+      const stream = fs.createReadStream(path.join(publicPath, 'index.html'));
+      res.type('text/html').send(stream);
     });
   }
 

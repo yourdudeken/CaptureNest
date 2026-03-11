@@ -115,7 +115,7 @@ export default function Camera() {
     setUploading(true);
     try {
       // Upload directly to the server endpoint as multipart
-      const res = await fetch('/api/capture/image', {
+      const res = await fetch('/api/capture/video/upload', {
         method: 'POST',
         body: formData,
       });

@@ -5,6 +5,10 @@ import { saveVideo } from '../../services/media/mediaService';
 import { runAnalysisPipeline } from '../../services/ai/analysisPipeline';
 import { getSettings } from '../../services/settings/settingsService';
 import { getCameraById } from '../../services/camera/cameraService';
+import fs from 'fs-extra';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { VIDEOS_DIR } from '../../services/media/mediaService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Capture Routes
@@ -54,6 +58,31 @@ const captureRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err);
       return reply.code(500).send({ error: 'Failed to capture image' });
+    }
+  });
+
+  /**
+   * POST /api/capture/video/upload
+   * Body: multipart form with field "media" (file)
+   * Query: ?cameraId=default
+   */
+  fastify.post('/video/upload', async (req, reply) => {
+    const cameraId = (req.query as Record<string, string>).cameraId || 'default';
+    try {
+      const data = await req.file();
+      if (!data) return reply.code(400).send({ error: 'No video file provided' });
+      
+      const buffer = await data.toBuffer();
+      const filename = `${Date.now()}-${uuidv4()}.webm`;
+      const filepath = path.join(VIDEOS_DIR, filename);
+      
+      await fs.writeFile(filepath, buffer);
+      
+      const media = await saveVideo(filepath, cameraId);
+      return reply.code(201).send({ success: true, media });
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.code(500).send({ error: 'Failed to upload video' });
     }
   });
 
