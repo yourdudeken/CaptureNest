@@ -168,7 +168,7 @@ CaptureNest/
 │   ├── Dockerfile
 │   └── package.json
 │
-├── web/                       # Frontend (React + Vite + Tailwind)
+├── client/                       # Frontend (React + Vite + Tailwind)
 │   ├── src/
 │   │   ├── main.tsx           # Entry point
 │   │   ├── App.tsx            # Router
@@ -244,7 +244,7 @@ CaptureNest uses [Ollama](https://ollama.com) to run AI models locally:
 
 | Service | Port | Description |
 |---|---|---|
-| `capturenest-web` | 3000 | React dashboard |
+| `capturenest-client` | 3000 | React dashboard |
 | `capturenest-api` | 4000 | Fastify API server |
 | `ollama` | 11434 | AI model inference |
 | `qdrant` | 6333 | Vector database |
