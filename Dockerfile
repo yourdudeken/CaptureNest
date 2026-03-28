@@ -3,24 +3,24 @@ FROM node:20-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
 COPY server/package.json ./server/
-COPY web/package.json ./web/
+COPY client/package.json ./client/
 RUN npm ci
 
 COPY server/ ./server/
 COPY tsconfig.json ./
 RUN npm run build --workspace=server
 
-# ── Stage 2: Build the Web dashboard (Vite/React) ──
-FROM node:20-alpine AS web-build
+# ── Stage 2: Build the Client dashboard (Vite/React) ──
+FROM node:20-alpine AS client-build
 WORKDIR /app
 COPY package*.json ./
 COPY server/package.json ./server/
-COPY web/package.json ./web/
+COPY client/package.json ./client/
 RUN npm ci
 
-COPY web/ ./web/
+COPY client/ ./client/
 COPY tsconfig.json ./
-RUN npm run build --workspace=web
+RUN npm run build --workspace=client
 
 # ── Stage 3: Production Image (Combined) ──
 # We use a base Node 20 image (with FFmpeg) to run the Fastify API.
@@ -39,8 +39,8 @@ RUN npm ci --omit=dev --workspace=server
 # Copy compiled API code
 COPY --from=api-build /app/server/dist ./server/dist
 
-# Copy compiled Web dashboard into the API's public serving directory
-COPY --from=web-build /app/web/dist ./server/dist/public
+# Copy compiled Client dashboard into the API's public serving directory
+COPY --from=client-build /app/client/dist ./server/dist/public
 
 # Setup shared environment variables
 ENV NODE_ENV=production
