@@ -1,3 +1,11 @@
+# [1.4.0](https://github.com/yourdudeken/CaptureNest/compare/v1.3.1...v1.4.0) (2026-03-28)
+
+
+### Features
+
+* add Vite configuration and TypeScript build info for client application ([ff7fd09](https://github.com/yourdudeken/CaptureNest/commit/ff7fd098aaf7178a576f1765e45675066c9a6063))
+* add Vite configuration and TypeScript build info for client application ([43a6913](https://github.com/yourdudeken/CaptureNest/commit/43a69138b6170705b02b7b697a13a296252f2f5f))
+
 ## [1.3.1](https://github.com/yourdudeken/CaptureNest/compare/v1.3.0...v1.3.1) (2026-03-11)
 
 
