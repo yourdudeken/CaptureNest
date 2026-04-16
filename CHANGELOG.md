@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/yourdudeken/CaptureNest/compare/v1.4.0...v1.5.0) (2026-04-16)
+
+
+### Features
+
+* enhance journal functionality with legacy support and improved UI components ([2a3ae24](https://github.com/yourdudeken/CaptureNest/commit/2a3ae246e626b442293228cf659d19022a3da1b5))
+
 # [1.4.0](https://github.com/yourdudeken/CaptureNest/compare/v1.3.1...v1.4.0) (2026-03-28)
 
 
