@@ -14,163 +14,171 @@ Returns server status (no auth required).
 
 **Response:**
 ```json
-{ "status": "ok", "timestamp": "2026-03-10T08:00:00Z" }
+{ "status": "ok", "timestamp": "2026-04-16T08:00:00Z" }
 ```
 
 ---
 
-## Capture
+## Entries
 
-### `POST /api/capture/image`
-Capture a still image from a camera.
+### `GET /api/entries`
+List journal entries with optional filters.
 
 **Query params:**
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `cameraId` | string | `default` | Camera to capture from |
+| Param | Type | Description |
+|---|---|---|
+| `type` | `text` \| `audio` \| `image` \| `video` \| `document` | Filter by type |
+| `limit` | number | Results per page (default 50) |
+| `offset` | number | Pagination offset |
+| `aiProcessed` | `true` \| `false` | Filter by analysis status |
+| `tag` | string | Filter by tag |
 
-**Body options:**
-
-Option A — `multipart/form-data`:
-```
-Field: media  (file)
-```
-
-Option B — `application/json`:
+**Response:**
 ```json
-{ "imageData": "data:image/jpeg;base64,/9j/..." }
+{
+  "items": [ /* Entry[] */ ],
+  "total": 142
+}
+```
+
+---
+
+### `GET /api/entries/:id`
+Get a single entry by UUID.
+
+**Response:** `Entry` or `404`.
+
+---
+
+### `POST /api/entries/text`
+Create a text journal entry. AI processes immediately.
+
+**Body:**
+```json
+{ "content": "Today I went for a walk in the park and felt really peaceful..." }
+```
+
+**Response `202`:**
+```json
+{ "status": "processing" }
+```
+
+The entry is created with AI-generated: title, summary, mood, tags.
+
+---
+
+### `POST /api/entries/audio`
+Upload an audio recording. AI processes asynchronously.
+
+**Headers:**
+- `Content-Type: multipart/form-data`
+- `x-duration` (optional): Duration in seconds
+
+**Body (form-data):**
+```
+Field: file  (audio file: webm, mp3, wav, etc.)
 ```
 
 **Response `201`:**
 ```json
 {
-  "success": true,
-  "media": {
-    "id": "uuid",
-    "filename": "1710000000-uuid.jpg",
-    "url": "/media/images/1710000000-uuid.jpg",
-    "thumbnailUrl": "/media/thumbnails/thumb-1710000000-uuid.jpg",
-    "type": "image",
-    "timestamp": "2026-03-10T08:00:00.000Z",
-    "tags": [],
-    "description": null,
-    "cameraId": "default",
-    "aiProcessed": false
-  }
+  "id": "uuid",
+  "type": "audio",
+  "fileUrl": "/media/audio/1234567890-uuid.webm",
+  "timestamp": "2026-04-16T10:00:00.000Z",
+  "aiProcessed": false,
+  ...
 }
 ```
 
 ---
 
-### `POST /api/capture/video/start`
-Start recording video.
+### `POST /api/entries/image`
+Upload an image. AI processes asynchronously.
 
-**Body:**
-```json
-{ "cameraId": "default", "source": "0" }
+**Body (form-data):**
+```
+Field: file  (image file: jpg, png, webp, etc.)
 ```
 
-**Response `200`:**
-```json
-{ "success": true, "cameraId": "default", "filepath": "/media/videos/..." }
-```
-
----
-
-### `POST /api/capture/video/stop`
-Stop active recording and save the video.
-
-**Body:**
-```json
-{ "cameraId": "default" }
-```
-
-**Response `200`:**
-```json
-{ "success": true, "media": { /* MediaItem */ } }
-```
-
----
-
-### `GET /api/capture/status`
-Get recording status for all cameras.
-
-**Response:**
+**Response `201`:**
 ```json
 {
-  "cameras": [
-    { "cameraId": "default", "name": "Default Webcam", "isRecording": false }
-  ]
+  "id": "uuid",
+  "type": "image",
+  "fileUrl": "/media/images/1234567890-uuid.jpg",
+  "thumbnailUrl": "/media/thumbnails/thumb-1234567890-uuid.jpg",
+  "timestamp": "2026-04-16T10:00:00.000Z",
+  "aiProcessed": false,
+  ...
 }
 ```
 
 ---
 
-## Media
+### `POST /api/entries/video`
+Upload a video.
 
-### `GET /api/media`
-List media with optional filters.
+**Body (form-data):**
+```
+Field: file  (video file: mp4, webm, etc.)
+```
 
-**Query params:**
-| Param | Type | Description |
-|---|---|---|
-| `type` | `image` \| `video` | Filter by type |
-| `cameraId` | string | Filter by camera |
-| `limit` | number (max 200) | Results per page (default 50) |
-| `offset` | number | Pagination offset |
-| `aiProcessed` | `0` \| `1` | Filter by analysis status |
-
-**Response:**
+**Response `201`:**
 ```json
 {
-  "items": [ /* MediaItem[] */ ],
-  "total": 142,
-  "limit": 50,
-  "offset": 0
+  "id": "uuid",
+  "type": "video",
+  "fileUrl": "/media/videos/1234567890-uuid.mp4",
+  "thumbnailUrl": "/media/thumbnails/thumb-uuid.jpg",
+  "durationSec": 120.5,
+  "timestamp": "2026-04-16T10:00:00.000Z",
+  "aiProcessed": false,
+  ...
 }
 ```
 
 ---
 
-### `GET /api/media/stats/overview`
-Get aggregate media counts.
+### `POST /api/entries/document`
+Upload a document (PDF, DOCX, TXT). AI processes asynchronously.
 
-**Response:**
+**Body (form-data):**
+```
+Field: file  (document file: pdf, docx, txt, md)
+```
+
+**Response `201`:**
 ```json
 {
-  "total": 142,
-  "images": 130,
-  "videos": 12,
-  "analyzed": 128,
-  "unanalyzed": 14
+  "id": "uuid",
+  "type": "document",
+  "title": "meeting-notes.pdf",
+  "fileUrl": "/media/documents/1234567890-uuid.pdf",
+  "timestamp": "2026-04-16T10:00:00.000Z",
+  "aiProcessed": false,
+  ...
 }
 ```
 
 ---
 
-### `GET /api/media/:id`
-Get a single media item by UUID.
-
-**Response:** `MediaItem` or `404`.
-
----
-
-### `DELETE /api/media/:id`
-Delete media item, its files, and its vector embedding.
+### `DELETE /api/entries/:id`
+Delete an entry and its files.
 
 **Response:**
 ```json
-{ "success": true, "id": "uuid" }
+{ "status": "deleted" }
 ```
 
 ---
 
-### `POST /api/media/:id/reanalyze`
-Re-run AI analysis on an existing image.
+### `POST /api/entries/:id/reanalyze`
+Re-run AI processing on an entry.
 
 **Response:**
 ```json
-{ "success": true, "message": "Re-analysis queued" }
+{ "status": "reanalyzing" }
 ```
 
 ---
@@ -183,7 +191,7 @@ Semantic search using natural language.
 **Body:**
 ```json
 {
-  "query": "person at a desk with laptop",
+  "query": "when was I feeling stressed",
   "limit": 20,
   "minScore": 0.25,
   "type": "all"
@@ -195,54 +203,28 @@ Semantic search using natural language.
 | `query` | string | *required* | Natural language query |
 | `limit` | number | `20` | Max results |
 | `minScore` | number | `0.25` | Minimum similarity score (0–1) |
-| `type` | `all` \| `image` \| `video` | `all` | Filter by media type |
+| `type` | `all` \| `text` \| `audio` \| `image` \| `video` \| `document` | `all` | Filter by entry type |
 
 **Response:**
 ```json
 {
-  "query": "person at a desk with laptop",
+  "query": "when was I feeling stressed",
   "count": 5,
   "results": [
     {
       "id": "uuid",
+      "type": "text",
+      "content": "Today was really stressful at work...",
+      "summary": "User reflects on a stressful day at work",
+      "mood": "stressed",
+      "tags": ["work", "stress", "difficult"],
       "score": 0.847,
-      "url": "/media/images/...",
-      "description": "A person sitting at a desk using a laptop",
-      "tags": ["person", "desk", "laptop", "indoor"],
+      "timestamp": "2026-04-15T10:00:00.000Z",
       ...
     }
   ]
 }
 ```
-
----
-
-## Cameras
-
-### `GET /api/camera`
-List all configured cameras.
-
-### `POST /api/camera`
-Add a camera.
-
-**Body:**
-```json
-{
-  "name": "Front Door",
-  "type": "rtsp",
-  "source": "rtsp://192.168.1.100:554/stream",
-  "enabled": true,
-  "motionDetection": false,
-  "scheduledCapture": false,
-  "scheduleInterval": 60
-}
-```
-
-### `PUT /api/camera/:id`
-Update a camera (partial).
-
-### `DELETE /api/camera/:id`
-Remove a camera.
 
 ---
 
@@ -279,28 +261,34 @@ List models available in Ollama.
 
 **Response:**
 ```json
-{ "models": ["llava", "llava:13b", "nomic-embed-text"] }
+{ "models": ["whisper", "llava", "llava:13b", "nomic-embed-text"] }
 ```
 
 ---
 
-## MediaItem Schema
+## Entry Schema
 
 ```typescript
-interface MediaItem {
-  id:           string;       // UUID
-  filename:     string;
-  url:          string;       // e.g. /media/images/file.jpg
-  thumbnailUrl: string | null;
-  type:         'image' | 'video';
-  timestamp:    string;       // ISO-8601
-  tags:         string[];
-  description:  string | null;
-  cameraId:     string;
-  durationSec:  number | null;  // videos only
-  fileSize:     number | null;  // bytes
-  width:        number | null;
-  height:       number | null;
-  aiProcessed:  boolean;
+type EntryType = 'text' | 'audio' | 'image' | 'video' | 'document';
+
+interface Entry {
+  id: string;                    // UUID
+  type: EntryType;
+  title: string | null;          // AI-generated
+  content: string | null;        // AI-processed text
+  originalFile: string | null;  // Original filename
+  filePath: string | null;       // Server file path
+  fileUrl: string | null;        // Public URL
+  thumbnailUrl: string | null;   // For image/video
+  summary: string | null;       // AI-generated summary
+  mood: string | null;          // AI-detected mood
+  tags: string[];               // AI-generated tags
+  sourceText: string | null;    // Original text (audio transcript, etc.)
+  timestamp: string;             // ISO-8601
+  aiProcessed: boolean;
+  fileSize: number | null;       // bytes
+  durationSec: number | null;    // for audio/video
+  mimeType: string | null;
+  metadata: Record<string, unknown> | null;
 }
 ```

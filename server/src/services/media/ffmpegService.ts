@@ -1,7 +1,7 @@
 import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs-extra';
-import { VIDEOS_DIR } from './mediaService';
+import { VIDEOS_DIR } from './entryService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FFmpeg Service

@@ -48,28 +48,30 @@ function runMigrations(database: Database.Database): void {
       created_at     TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- Media metadata table
-    CREATE TABLE IF NOT EXISTS media (
-      id             TEXT PRIMARY KEY,
-      filename       TEXT NOT NULL,
-      filepath       TEXT NOT NULL,
-      thumbnail_path TEXT,
-      type           TEXT NOT NULL CHECK(type IN ('image','video')),
-      timestamp      TEXT NOT NULL DEFAULT (datetime('now')),
-      tags           TEXT NOT NULL DEFAULT '[]',   -- JSON array
-      description    TEXT,
-      camera_id      TEXT NOT NULL DEFAULT 'default',
-      duration_sec   REAL,
-      file_size      INTEGER,
-      width          INTEGER,
-      height         INTEGER,
-      ai_processed   INTEGER NOT NULL DEFAULT 0 CHECK(ai_processed IN (0,1))
+    -- Entries table (replaces media table for journal app)
+    CREATE TABLE IF NOT EXISTS entries (
+      id               TEXT PRIMARY KEY,
+      type             TEXT NOT NULL CHECK(type IN ('text','audio','image','video','document')),
+      title            TEXT,
+      content          TEXT,
+      original_file    TEXT,
+      file_path        TEXT,
+      thumbnail_path   TEXT,
+      summary          TEXT,
+      mood             TEXT,
+      tags             TEXT NOT NULL DEFAULT '[]',
+      source_text      TEXT,
+      timestamp        TEXT NOT NULL DEFAULT (datetime('now')),
+      ai_processed     INTEGER NOT NULL DEFAULT 0 CHECK(ai_processed IN (0,1)),
+      file_size        INTEGER,
+      duration_sec     REAL,
+      mime_type        TEXT,
+      metadata         TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_media_timestamp  ON media(timestamp DESC);
-    CREATE INDEX IF NOT EXISTS idx_media_type       ON media(type);
-    CREATE INDEX IF NOT EXISTS idx_media_camera     ON media(camera_id);
-    CREATE INDEX IF NOT EXISTS idx_media_ai         ON media(ai_processed);
+    CREATE INDEX IF NOT EXISTS idx_entries_timestamp ON entries(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_entries_type      ON entries(type);
+    CREATE INDEX IF NOT EXISTS idx_entries_ai       ON entries(ai_processed);
 
     -- Camera configurations
     CREATE TABLE IF NOT EXISTS cameras (
@@ -99,7 +101,7 @@ function runMigrations(database: Database.Database): void {
     ['ollama_url',            process.env.OLLAMA_URL    || 'http://ollama:11434'],
     ['ollama_model',          process.env.OLLAMA_MODEL  || 'llava'],
     ['qdrant_url',            process.env.QDRANT_URL    || 'http://qdrant:6333'],
-    ['qdrant_collection',     'capturenest_media'],
+    ['qdrant_collection',     'capturenest_entries'],
     ['media_path',            process.env.MEDIA_PATH    || './media'],
     ['default_camera_id',     'default'],
     ['ai_auto_analyze',       '1'],

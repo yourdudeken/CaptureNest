@@ -1,20 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Images, Video, Brain, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mediaApi, type MediaItem } from '../lib/api';
+import { FileText, Mic, Image, Video, File, Brain, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { entryApi, type Entry, type EntryType } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Media Library Page
-// Responsive grid of captured media with type filter and pagination.
-// ─────────────────────────────────────────────────────────────────────────────
-
-type Filter = 'all' | 'image' | 'video';
+type Filter = 'all' | EntryType;
 const PAGE_SIZE = 32;
 
 export default function Library() {
-  const [items, setItems]     = useState<MediaItem[]>([]);
+  const [items, setItems]     = useState<Entry[]>([]);
   const [total, setTotal]     = useState(0);
   const [filter, setFilter]   = useState<Filter>('all');
   const [page, setPage]       = useState(0);
@@ -23,7 +18,7 @@ export default function Library() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await mediaApi.list({
+      const res = await entryApi.list({
         type:   filter === 'all' ? undefined : filter,
         limit:  PAGE_SIZE,
         offset: page * PAGE_SIZE,
@@ -31,7 +26,7 @@ export default function Library() {
       setItems(res.data.items);
       setTotal(res.data.total);
     } catch {
-      toast.error('Failed to load media');
+      toast.error('Failed to load entries');
     } finally {
       setLoading(false);
     }
@@ -41,18 +36,26 @@ export default function Library() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const getIcon = (type: EntryType) => {
+    switch (type) {
+      case 'text': return <FileText className="w-6 h-6" />;
+      case 'audio': return <Mic className="w-6 h-6" />;
+      case 'image': return <Image className="w-6 h-6" />;
+      case 'video': return <Video className="w-6 h-6" />;
+      case 'document': return <File className="w-6 h-6" />;
+    }
+  };
+
   return (
     <div className="p-8 animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Media Library</h1>
-          <p className="text-gray-400 text-sm mt-1">{total} captures total</p>
+          <h1 className="text-2xl font-bold text-white">Timeline</h1>
+          <p className="text-gray-400 text-sm mt-1">{total} entries total</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Filter pills */}
           <div className="flex gap-1 p-1 bg-surface-elevated border border-surface-border rounded-lg">
-            {(['all', 'image', 'video'] as Filter[]).map(f => (
+            {(['all', 'text', 'audio', 'image', 'video', 'document'] as Filter[]).map(f => (
               <button
                 key={f}
                 onClick={() => { setFilter(f); setPage(0); }}
@@ -62,7 +65,7 @@ export default function Library() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                {f === 'all' ? 'All' : f === 'image' ? 'Photos' : 'Videos'}
+                {f === 'all' ? 'All' : f}
               </button>
             ))}
           </div>
@@ -72,59 +75,52 @@ export default function Library() {
         </div>
       </div>
 
-      {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-xl bg-surface-elevated animate-pulse" />
+            <div key={i} className="h-32 rounded-xl bg-surface-elevated animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-gray-500">
-          <Images className="w-14 h-14 mb-4 opacity-30" />
-          <p className="text-base font-medium">No media found</p>
-          <p className="text-sm mt-1">Capture a photo or video to see it here</p>
+          <FileText className="w-14 h-14 mb-4 opacity-30" />
+          <p className="text-base font-medium">No entries found</p>
+          <p className="text-sm mt-1">Start journaling to see your entries here</p>
         </div>
       ) : (
-        <div className="grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {items.map(item => (
-            <Link key={item.id} to={`/library/${item.id}`} className="media-thumb">
-              {/* Thumbnail */}
-              {(item.thumbnailUrl || item.type === 'image') ? (
-                <img
-                  src={item.thumbnailUrl || item.url}
-                  alt={item.description || item.filename}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-surface">
-                  <Video className="w-6 h-6 text-gray-500" />
+            <Link key={item.id} to={`/library/${item.id}`} className="card p-4 hover:border-brand-500/40 transition-all">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-surface-elevated flex items-center justify-center text-gray-400">
+                  {getIcon(item.type)}
                 </div>
-              )}
-
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent
-                              opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="absolute bottom-2 left-2 right-2">
-                  <p className="text-[10px] text-gray-300 truncate">
-                    {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
-                  </p>
-                  {item.tags.slice(0, 2).map(t => (
-                    <span key={t} className="tag mr-1 mt-0.5 text-[9px] !px-1 !py-0">{t}</span>
-                  ))}
-                </div>
+                <span className="text-xs text-gray-500 capitalize">{item.type}</span>
+                {item.aiProcessed && <Brain className="w-3 h-3 text-brand-400 ml-auto" />}
               </div>
-
-              {/* Badges */}
-              {item.type === 'video' && (
-                <div className="absolute top-1.5 left-1.5">
-                  <span className="badge bg-red-500/80 text-white text-[9px] !px-1.5 !py-0.5">VID</span>
-                </div>
+              
+              {item.type === 'image' && item.thumbnailUrl && (
+                <img src={item.thumbnailUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-3" />
               )}
-              {item.aiProcessed && (
-                <div className="absolute top-1.5 right-1.5">
-                  <Brain className="w-3 h-3 text-brand-400 drop-shadow-lg" />
+              
+              <p className="text-sm text-white line-clamp-2 mb-2">
+                {item.title || item.content || item.summary || 'Untitled'}
+              </p>
+              
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                </p>
+                {item.mood && (
+                  <span className="tag text-[10px]">{item.mood}</span>
+                )}
+              </div>
+              
+              {item.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {item.tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="tag text-[9px] !px-1 !py-0">{tag}</span>
+                  ))}
                 </div>
               )}
             </Link>
@@ -132,7 +128,6 @@ export default function Library() {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 mt-8">
           <button

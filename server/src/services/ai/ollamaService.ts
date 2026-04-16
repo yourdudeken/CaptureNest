@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AIAnalysis } from '../../types';
+import { AIAnalysis, AIStructuredEntry } from '../../types';
 import { getSettings } from '../settings/settingsService';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,5 +122,97 @@ export async function listOllamaModels(): Promise<string[]> {
     return (res.data.models as Array<{ name: string }>).map(m => m.name);
   } catch {
     return [];
+  }
+}
+
+/**
+ * Transcribe audio using Ollama's Whisper model.
+ * The audio must be provided as a base64-encoded string.
+ */
+export async function transcribeAudio(base64Audio: string): Promise<string> {
+  const settings = getSettings();
+  const url = `${settings.ollamaUrl}/api/transcriptions`;
+
+  const formData = new FormData();
+  const audioBuffer = Buffer.from(base64Audio, 'base64');
+  const blob = new Blob([audioBuffer], { type: 'audio/webm' });
+  formData.append('file', blob, 'audio.webm');
+  formData.append('model', 'whisper');
+
+  try {
+    const response = await axios.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120_000,
+    });
+    return response.data.text || '';
+  } catch (err) {
+    console.error('[Ollama] Whisper transcription error:', err instanceof Error ? err.message : err);
+    return '';
+  }
+}
+
+/**
+ * Structure raw text into a structured journal entry using an LLM.
+ */
+export async function structureTextEntry(text: string): Promise<AIStructuredEntry> {
+  const settings = getSettings();
+  const url = `${settings.ollamaUrl}/api/generate`;
+
+  const prompt = `You are an AI assistant for a personal journal app. 
+Analyze this journal entry and respond ONLY with a valid JSON object (no markdown, no explanation) in exactly this format:
+
+{
+  "title": "A short descriptive title (max 50 chars)",
+  "content": "The cleaned and improved content (preserve the original meaning)",
+  "summary": "A brief 1-2 sentence summary of the entry",
+  "mood": "One word describing the mood (e.g., happy, sad, calm, anxious, excited, grateful)",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}
+
+Rules:
+- Title should capture the main topic or activity
+- Content should be the cleaned version of the original text
+- Mood should be one word, lowercase
+- Tags should be lowercase, relevant keywords (max 5)
+
+Input text:
+${text}`;
+
+  try {
+    const response = await axios.post(
+      url,
+      {
+        model: settings.ollamaModel,
+        prompt,
+        stream: false,
+        options: { temperature: 0.3 },
+      },
+      { timeout: 60_000 }
+    );
+
+    const raw: string = response.data.response || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error(`Could not parse JSON from model response: ${raw.slice(0, 200)}`);
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as Partial<AIStructuredEntry>;
+
+    return {
+      title: parsed.title || 'Untitled',
+      content: parsed.content || text,
+      summary: parsed.summary || '',
+      mood: parsed.mood || null,
+      tags: Array.isArray(parsed.tags) ? parsed.tags.slice(0, 5) : [],
+    };
+  } catch (err) {
+    console.error('[Ollama] Text structuring error:', err instanceof Error ? err.message : err);
+    return {
+      title: 'Untitled',
+      content: text,
+      summary: '',
+      mood: null,
+      tags: [],
+    };
   }
 }

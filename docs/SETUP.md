@@ -12,7 +12,7 @@ Before deploying the application, ensure your host system has the following inst
    - Minimum: 4GB RAM, 2 CPU Cores.
    - Recommended: 8GB+ RAM, 4+ CPU Cores (for local AI analysis).
    - Local LLM execution requires sufficient memory or a compatible GPU for acceptable inference times.
-4. **Network**: Port 4000 must be available. 11434 (Ollama) and 6333 (Qdrant) are used internally but can be exposed if needed.
+4. **Network**: Port 3000 (web) must be available. 11434 (Ollama) and 6333 (Qdrant) are used internally but can be exposed if needed.
 
 ## Deployment Method 1: Pre-built Docker Image (Recommended)
 
@@ -59,10 +59,11 @@ services:
       MEDIA_PATH:      "/media"
       OLLAMA_URL:      "http://ollama:11434"
       OLLAMA_MODEL:    "llava"
+      WHISPER_MODEL:   "whisper"
       EMBED_MODEL:     "nomic-embed-text"
       EMBED_DIMENSIONS: "768"
       QDRANT_URL:      "http://qdrant:6333"
-      CORS_ORIGIN:     "http://localhost:4000"
+      CORS_ORIGIN:     "http://localhost:3000"
       LOG_LEVEL:       "info"
     volumes:
       - media:/media
@@ -167,9 +168,9 @@ docker compose up --build -d
 
 Once the server has fully initialized (this requires first pulling the Docker images online), access the dashboard through your web browser:
 
-**Dashboard URL**: `http://localhost:4000`
+**Dashboard URL**: `http://localhost:3000`
 
-If deploying to a headless server, replace `localhost` with the server's local IP address (e.g., `http://192.168.1.100:4000`).
+If deploying to a headless server, replace `localhost` with the server's local IP address (e.g., `http://192.168.1.100:3000`).
 
 ## Post-Installation Steps
 
@@ -177,8 +178,17 @@ If deploying to a headless server, replace `localhost` with the server's local I
   ```bash
   docker logs -f capturenest-capturenest-1
   ```
-- **Camera Configuration**: Navigate to the "Camera" tab to verify your system detects physical webcams. If using an RTSP network camera, configure the stream URL in the Settings menu.
-- **AI Models**: The default vision model (`llava`) requires a one-time download on first use by the system. First-time AI analysis tasks will appear hung while Ollama pulls the model files into memory. 
+- **AI Models**: Pull required models for the journal app:
+  ```bash
+  # Speech-to-text
+  docker exec -it capturenest-ollama-1 ollama pull whisper
+  
+  # Vision for image analysis
+  docker exec -it capturenest-ollama-1 ollama pull llava
+  
+  # Embeddings for semantic search
+  docker exec -it capturenest-ollama-1 ollama pull nomic-embed-text
+  ```
 - **Hardware Acceleration**: If your host has an NVIDIA GPU configured with the container toolkit, uncomment the `deploy` rules under the `ollama` service block in `docker-compose.yml` to enable GPU acceleration before running compose up.
 
 ## Troubleshooting

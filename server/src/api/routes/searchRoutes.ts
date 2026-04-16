@@ -1,24 +1,19 @@
 import { FastifyPluginAsync } from 'fastify';
 import { naturalLanguageSearch } from '../../services/search/searchService';
-import { MediaType } from '../../types';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Search Routes
-// POST /api/search  – natural language search
-// ─────────────────────────────────────────────────────────────────────────────
+import { EntryType } from '../../types';
 
 const searchRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /api/search
-   * Body: { query: string, limit?: number, minScore?: number, type?: 'image'|'video'|'all' }
+   * Body: { query: string, limit?: number, minScore?: number, type?: EntryType|'all' }
    */
   fastify.post('/', async (req, reply) => {
     const body = req.body as {
       query?:    string;
       limit?:    number;
       minScore?: number;
-      type?:     MediaType | 'all';
+      type?:     EntryType | 'all';
     };
 
     if (!body?.query?.trim()) {
@@ -37,7 +32,7 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
         query:   body.query,
         count:   results.length,
         results: results.map(r => ({
-          ...r.mediaItem,
+          ...r.entry,
           score: r.score,
         })),
       });
