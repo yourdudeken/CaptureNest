@@ -7,6 +7,7 @@ const api = axios.create({
 
 export type EntryType = 'text' | 'audio' | 'image' | 'video' | 'document';
 
+// Add legacy properties for backwards compatibility
 export interface Entry {
   id: string;
   type: EntryType;
@@ -26,6 +27,14 @@ export interface Entry {
   durationSec: number | null;
   mimeType: string | null;
   metadata: Record<string, unknown> | null;
+  // Legacy properties for backwards compatibility
+  url: string;
+  filename: string;
+  description: string | null;
+  // MediaDetail properties
+  cameraId?: string;
+  width?: number | null;
+  height?: number | null;
 }
 
 export interface EntryStats {
@@ -47,6 +56,20 @@ export interface HealthStatus {
   ollama: 'ok' | 'unavailable';
   qdrant: 'ok' | 'unavailable';
 }
+
+// Legacy type aliases for backwards compatibility
+export type MediaItem = Entry;
+export type MediaStats = EntryStats;
+export type CameraConfig = {
+  id: string;
+  name: string;
+  type: 'webcam' | 'rtsp' | 'usb';
+  source: string | number;
+  enabled: boolean;
+  motionDetection: boolean;
+  scheduledCapture: boolean;
+  scheduleInterval: number;
+};
 
 export const entryApi = {
   list: (params?: { 
@@ -136,6 +159,47 @@ export const authApi = {
 
   me: () =>
     api.get<{ user: { id: string; username: string } }>('/auth/me'),
+};
+
+// Legacy API aliases for backwards compatibility
+export const mediaApi = {
+  list: (params?: { type?: string; limit?: number; offset?: number }) =>
+    api.get<{ items: Entry[]; total: number }>('/entries', { params }),
+  get: (id: string) =>
+    api.get<Entry>(`/entries/${id}`),
+  delete: (id: string) =>
+    api.delete<{ status: string }>(`/entries/${id}`),
+  reanalyze: (id: string) =>
+    api.post<{ status: string }>(`/entries/${id}/reanalyze`),
+  stats: () =>
+    api.get<EntryStats>('/entries'),
+};
+
+export const captureApi = {
+  captureImage: (imageData: string, cameraId = 'default') =>
+    api.post<{ success: boolean; media: Entry }>(
+      `/entries/image?cameraId=${cameraId}`,
+      { imageData },
+    ),
+  startRecording: (cameraId = 'default', source?: string) =>
+    api.post('/entries/video/start', { cameraId, source }),
+  stopRecording: (cameraId = 'default') =>
+    api.post<{ success: boolean; media: Entry }>('/entries/video/stop', { cameraId }),
+  status: () =>
+    api.get<{ cameras: Array<{ cameraId: string; name: string; isRecording: boolean }> }>(
+      '/entries/video/status'
+    ),
+};
+
+export const cameraApi = {
+  list: () =>
+    api.get<{ cameras: CameraConfig[] }>('/camera'),
+  add: (data: Omit<CameraConfig, 'id'>) =>
+    api.post<CameraConfig>('/camera', data),
+  update: (id: string, data: Partial<CameraConfig>) =>
+    api.put<CameraConfig>(`/camera/${id}`, data),
+  delete: (id: string) =>
+    api.delete(`/camera/${id}`),
 };
 
 export default api;

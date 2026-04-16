@@ -1,21 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search as SearchIcon, Loader2, Brain, Sparkles, Video, Clock } from 'lucide-react';
-import { searchApi, type SearchResult } from '../lib/api';
+import { Search as SearchIcon, Loader2, Brain, Sparkles, FileText, Mic, Image, Video, File, Clock } from 'lucide-react';
+import { searchApi, type SearchResult, type EntryType } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AI Search Page — Natural language media search powered by Qdrant + Ollama
-// ─────────────────────────────────────────────────────────────────────────────
-
 const EXAMPLE_QUERIES = [
-  'person sitting at a desk',
-  'laptop on a table',
-  'someone walking indoors',
-  'outdoor scene with trees',
-  'empty room',
-  'multiple people gathered',
+  'when was I feeling stressed',
+  'happy moments',
+  'entries about work',
+  'vacation memories',
+  'family gatherings',
+  'things I learned',
 ];
 
 export default function Search() {
@@ -42,20 +38,28 @@ export default function Search() {
     }
   };
 
+  const getIcon = (type: EntryType) => {
+    switch (type) {
+      case 'text': return <FileText className="w-4 h-4" />;
+      case 'audio': return <Mic className="w-4 h-4" />;
+      case 'image': return <Image className="w-4 h-4" />;
+      case 'video': return <Video className="w-4 h-4" />;
+      case 'document': return <File className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="p-8 animate-fade-in">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <Brain className="w-6 h-6 text-brand-400" />
-          AI Search
+          Memory Search
         </h1>
         <p className="text-gray-400 text-sm mt-1">
-          Search your media using natural language — powered by local vector embeddings
+          Search your journal entries using natural language — powered by local AI
         </p>
       </div>
 
-      {/* Search bar */}
       <div className="relative mb-3">
         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input
@@ -63,7 +67,7 @@ export default function Search() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          placeholder='Try: "person at a desk" or "outdoor daytime scene"'
+          placeholder='Try: "when was I feeling happy" or "entries about my trip"'
           className="input !pl-10 !pr-28 !py-3.5 !text-base"
         />
         <button
@@ -80,7 +84,6 @@ export default function Search() {
         </button>
       </div>
 
-      {/* Example queries */}
       {!searched && (
         <div className="mb-8">
           <p className="text-xs text-gray-500 mb-2">Example queries:</p>
@@ -99,11 +102,10 @@ export default function Search() {
         </div>
       )}
 
-      {/* Results */}
       {loading && (
-        <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-xl bg-surface-elevated animate-pulse" />
+            <div key={i} className="h-32 rounded-xl bg-surface-elevated animate-pulse" />
           ))}
         </div>
       )}
@@ -112,7 +114,7 @@ export default function Search() {
         <div className="text-center py-20 text-gray-500">
           <Brain className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">No matches found</p>
-          <p className="text-sm mt-1">Try a broader description or ensure media has been analyzed</p>
+          <p className="text-sm mt-1">Try a broader description or ensure entries have been analyzed</p>
         </div>
       )}
 
@@ -125,37 +127,34 @@ export default function Search() {
             </p>
           </div>
 
-          <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {results.map(item => (
-              <Link key={item.id} to={`/library/${item.id}`} className="media-thumb">
-                {(item.thumbnailUrl || item.type === 'image') ? (
-                  <img
-                    src={item.thumbnailUrl || item.url}
-                    alt={item.description || item.filename}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-surface">
-                    <Video className="w-6 h-6 text-gray-500" />
+              <Link key={item.id} to={`/library/${item.id}`} className="card p-4 hover:border-brand-500/40 transition-all">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded bg-surface-elevated flex items-center justify-center text-gray-400">
+                    {getIcon(item.type)}
                   </div>
-                )}
-
-                {/* Similarity score badge */}
-                <div className="absolute top-1.5 right-1.5">
-                  <span className="badge bg-brand-600/70 text-white text-[9px] !px-1.5 font-mono">
-                    {(item.score * 100).toFixed(0)}%
+                  <span className="text-xs text-gray-500 capitalize">{item.type}</span>
+                  <span className="ml-auto text-xs text-brand-400 font-mono">
+                    {Math.round(item.score * 100)}%
                   </span>
                 </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent
-                                opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <p className="text-[10px] text-gray-300 line-clamp-2 leading-snug">
-                      {item.description || item.filename}
-                    </p>
-                  </div>
-                </div>
+                {item.type === 'image' && item.thumbnailUrl && (
+                  <img src={item.thumbnailUrl} alt="" className="w-full h-24 object-cover rounded-lg mb-3" />
+                )}
+
+                <p className="text-sm text-white line-clamp-2 mb-2">
+                  {item.title || item.content || item.summary || 'Untitled'}
+                </p>
+
+                {item.mood && (
+                  <span className="tag text-[10px] mb-2">{item.mood}</span>
+                )}
+
+                <p className="text-xs text-gray-500">
+                  {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                </p>
               </Link>
             ))}
           </div>
