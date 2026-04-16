@@ -1,54 +1,44 @@
 import axios from 'axios';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Typed API client for CaptureNest
-// All requests go through Vite's proxy (/api → localhost:4000/api)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const api = axios.create({
   baseURL: '/api',
   timeout: 120_000,
 });
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+export type EntryType = 'text' | 'audio' | 'image' | 'video' | 'document';
 
-export interface MediaItem {
+export interface Entry {
   id: string;
-  filename: string;
-  url: string;
+  type: EntryType;
+  title: string | null;
+  content: string | null;
+  originalFile: string | null;
+  filePath: string | null;
+  fileUrl: string | null;
   thumbnailUrl: string | null;
-  type: 'image' | 'video';
-  timestamp: string;
+  summary: string | null;
+  mood: string | null;
   tags: string[];
-  description: string | null;
-  cameraId: string;
-  durationSec: number | null;
-  fileSize: number | null;
-  width: number | null;
-  height: number | null;
+  sourceText: string | null;
+  timestamp: string;
   aiProcessed: boolean;
+  fileSize: number | null;
+  durationSec: number | null;
+  mimeType: string | null;
+  metadata: Record<string, unknown> | null;
 }
 
-export interface MediaStats {
+export interface EntryStats {
   total: number;
-  images: number;
-  videos: number;
+  text: number;
+  audio: number;
+  image: number;
+  video: number;
+  document: number;
   analyzed: number;
-  unanalyzed: number;
 }
 
-export interface CameraConfig {
-  id: string;
-  name: string;
-  type: 'webcam' | 'rtsp' | 'usb';
-  source: string | number;
-  enabled: boolean;
-  motionDetection: boolean;
-  scheduledCapture: boolean;
-  scheduleInterval: number;
-}
-
-export interface SearchResult extends MediaItem {
+export interface SearchResult extends Entry {
   score: number;
 }
 
@@ -58,71 +48,63 @@ export interface HealthStatus {
   qdrant: 'ok' | 'unavailable';
 }
 
-// ── Media ─────────────────────────────────────────────────────────────────────
-
-export const mediaApi = {
-  list: (params?: { type?: string; limit?: number; offset?: number }) =>
-    api.get<{ items: MediaItem[]; total: number }>('/media', { params }),
+export const entryApi = {
+  list: (params?: { 
+    type?: EntryType; 
+    limit?: number; 
+    offset?: number; 
+    aiProcessed?: boolean;
+    tag?: string;
+  }) =>
+    api.get<{ items: Entry[]; total: number }>('/entries', { params }),
 
   get: (id: string) =>
-    api.get<MediaItem>(`/media/${id}`),
+    api.get<Entry>(`/entries/${id}`),
+
+  createText: (content: string) =>
+    api.post<{ status: string }>('/entries/text', { content }),
+
+  createAudio: (file: File, duration?: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    if (duration) headers['x-duration'] = String(duration);
+    return api.post<Entry>('/entries/audio', formData, { headers });
+  },
+
+  createImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<Entry>('/entries/image', formData);
+  },
+
+  createVideo: (file: File, duration?: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    if (duration) headers['x-duration'] = String(duration);
+    return api.post<Entry>('/entries/video', formData, { headers });
+  },
+
+  createDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<Entry>('/entries/document', formData);
+  },
 
   delete: (id: string) =>
-    api.delete<{ success: boolean }>(`/media/${id}`),
+    api.delete<{ status: string }>(`/entries/${id}`),
 
   reanalyze: (id: string) =>
-    api.post(`/media/${id}/reanalyze`),
-
-  stats: () =>
-    api.get<MediaStats>('/media/stats/overview'),
+    api.post<{ status: string }>(`/entries/${id}/reanalyze`),
 };
-
-// ── Capture ───────────────────────────────────────────────────────────────────
-
-export const captureApi = {
-  /** Send a base64 image (data URL accepted) */
-  captureImage: (imageData: string, cameraId = 'default') =>
-    api.post<{ success: boolean; media: MediaItem }>(
-      `/capture/image?cameraId=${cameraId}`,
-      { imageData },
-    ),
-
-  startRecording: (cameraId = 'default', source?: string) =>
-    api.post('/capture/video/start', { cameraId, source }),
-
-  stopRecording: (cameraId = 'default') =>
-    api.post<{ success: boolean; media: MediaItem }>('/capture/video/stop', { cameraId }),
-
-  status: () =>
-    api.get<{ cameras: Array<{ cameraId: string; name: string; isRecording: boolean }> }>(
-      '/capture/status'
-    ),
-};
-
-// ── Search ────────────────────────────────────────────────────────────────────
 
 export const searchApi = {
-  search: (query: string, options?: { limit?: number; type?: string }) =>
+  search: (query: string, options?: { limit?: number; type?: EntryType | 'all' }) =>
     api.post<{ query: string; count: number; results: SearchResult[] }>('/search', {
       query,
       ...options,
     }),
-};
-
-// ── Cameras ───────────────────────────────────────────────────────────────────
-
-export const cameraApi = {
-  list: () =>
-    api.get<{ cameras: CameraConfig[] }>('/camera'),
-
-  add: (data: Omit<CameraConfig, 'id'>) =>
-    api.post<CameraConfig>('/camera', data),
-
-  update: (id: string, data: Partial<CameraConfig>) =>
-    api.put<CameraConfig>(`/camera/${id}`, data),
-
-  delete: (id: string) =>
-    api.delete(`/camera/${id}`),
 };
 
 export const settingsApi = {
@@ -138,8 +120,6 @@ export const settingsApi = {
   models: () =>
     api.get<{ models: string[] }>('/settings/models'),
 };
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const authApi = {
   status: () =>

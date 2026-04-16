@@ -7,15 +7,14 @@ import path from 'path';
 import fs from 'fs';
 import { initDatabase } from './db/database';
 import { initQdrant } from './services/ai/qdrantService';
-import { ensureMediaDirs } from './services/media/mediaService';
+import { ensureMediaDirs } from './services/media/entryService';
 
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 
 // Routes
 import authRoutes from './api/routes/authRoutes';
-import captureRoutes from './api/routes/captureRoutes';
-import mediaRoutes from './api/routes/mediaRoutes';
+import entryRoutes from './api/routes/entryRoutes';
 import searchRoutes from './api/routes/searchRoutes';
 import cameraRoutes from './api/routes/cameraRoutes';
 import settingsRoutes from './api/routes/settingsRoutes';
@@ -79,8 +78,7 @@ async function bootstrap() {
       }
     });
 
-    api.register(captureRoutes, { prefix: '/capture' });
-    api.register(mediaRoutes,   { prefix: '/media' });
+    api.register(entryRoutes,  { prefix: '/entries' });
     api.register(searchRoutes,  { prefix: '/search' });
     api.register(cameraRoutes,  { prefix: '/camera' });
     api.register(settingsRoutes,{ prefix: '/settings' });

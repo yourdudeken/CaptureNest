@@ -2,9 +2,9 @@
 
 # CaptureNest
 
-### AI-powered self-hosted camera and media capture server
+### AI-powered self-hosted multimedia journal
 
-**Capture → Analyze → Search — entirely on your own hardware**
+**Journal → AI Process → Search — your personal memory system**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://typescriptlang.org)
@@ -18,12 +18,12 @@
 
 ## What is CaptureNest?
 
-CaptureNest is a **production-ready, self-hosted** AI media server. Point it at your webcam or RTSP camera, capture photos and videos, and let a local AI model automatically describe and tag your media. Then search everything using natural language — no cloud, no subscriptions, no data leaving your machine.
+CaptureNest is a **self-hosted AI-powered multimedia journal**. Capture your thoughts via text, voice, images, videos, or documents — AI extracts meaning, summarizes, detects mood, and tags everything. Search your memories using natural language.
 
 ```
-"Show me when someone was at the front door"
-"Find images with laptops"
-"Show outdoor scenes from today"
+"When was I feeling stressed?"
+"Find entries about my trip to Tokyo"
+"Show me happy moments from last week"
 ```
 
 ---
@@ -32,13 +32,15 @@ CaptureNest is a **production-ready, self-hosted** AI media server. Point it at 
 
 | Feature | Description |
 |---|---|
-| Live Camera | Browser-based live preview, photo capture, and video recording |
-| AI Analysis | Vision model (LLaVA) auto-generates descriptions and tags |
-| Semantic Search | Natural language queries powered by vector embeddings + Qdrant |
-| Media Library | Browse, filter, and manage your captures in a responsive grid |
-| RTSP Support | Connect IP cameras and NVR/DVR systems via RTSP streams |
-| Self-Hosted | Runs entirely locally — no cloud required |
-| One-Command Deploy | Full Docker Compose setup |
+| Text Journaling | Write entries, AI enriches with title, summary, mood, tags |
+| Voice Notes | Record audio → Whisper transcription → AI structuring |
+| Image Journal | Upload photos → AI describes and organizes |
+| Video Notes | Upload videos → AI summarizes content |
+| Document Import | PDF/DOCX/TXT → extract and summarize |
+| Semantic Search | "When did I feel happy?" — vector search powered by Qdrant |
+| Mood Tracking | AI detects mood, visualize emotion trends over time |
+| Self-Hosted | Runs entirely locally — no cloud, no subscriptions |
+| Docker Deploy | Full stack with one command |
 
 ---
 
@@ -47,26 +49,27 @@ CaptureNest is a **production-ready, self-hosted** AI media server. Point it at 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                   Web Dashboard (React)                  │
-│   Dashboard │ Camera │ Library │ AI Search │ Settings    │
+│   Dashboard │ Journal │ Timeline │ Search │ Settings    │
 └─────────────────────┬────────────────────────────────────┘
-                      │ HTTP (Vite proxy / nginx)
+                       │ HTTP (Vite proxy / nginx)
 ┌─────────────────────▼────────────────────────────────────┐
 │              CaptureNest API (Fastify/TypeScript)        │
 │                                                          │
 │  ┌─────────────┐ ┌────────────┐ ┌────────────────────┐   │
-│  │  Camera Svc │ │ Media Svc  │ │  AI Pipeline       │   │
-│  │  (FFmpeg)   │ │  (sharp)   │ │  Ollama → Qdrant   │   │
+│  │ Entry Svc   │ │ File Svc   │ │  AI Pipeline       │   │
+│  │ (CRUD)      │ │ (sharp)    │ │  Ollama → Qdrant   │   │
 │  └─────────────┘ └────────────┘ └────────────────────┘   │
 │                                                          │
-│  ┌──────────────────────────┐  ┌─────────────────────┐   │
-│  │   SQLite (metadata)      │  │  Local Filesystem   │   │
-│  └──────────────────────────┘  └─────────────────────┘   │
+│  ┌──────────────────────────┐  ┌─────────────────────┐  │
+│  │   SQLite (entries)       │  │  Local Filesystem   │  │
+│  └──────────────────────────┘  └─────────────────────┘  │
 └──────────────────────────────────────────────────────────┘
-         │                                      │
+          │                                      │
 ┌────────▼────────┐                   ┌─────────▼──────────┐
-│  Ollama Server  │                   │  Qdrant Vector DB  │
-│  (LLaVA model)  │                   │  (semantic search) │
-└─────────────────┘                   └────────────────────┘
+│  Ollama Server │                   │  Qdrant Vector DB  │
+│  (whisper,     │                   │  (semantic search) │
+│   llava, embed)│                   └─────────────────────┘
+└─────────────────┘
 ```
 
 ---
@@ -76,7 +79,6 @@ CaptureNest is a **production-ready, self-hosted** AI media server. Point it at 
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- A webcam or RTSP camera (optional for initial setup)
 
 ### 1. Clone the repository
 
@@ -91,15 +93,18 @@ cd CaptureNest
 docker compose up --build
 ```
 
-### 3. Pull the AI vision model
+### 3. Pull AI models
 
 In a separate terminal (first-time setup only):
 
 ```bash
-# Pull vision model for image analysis
+# Speech-to-text
+docker exec -it capturenest-ollama-1 ollama pull whisper
+
+# Vision model for image analysis
 docker exec -it capturenest-ollama-1 ollama pull llava
 
-# Pull embedding model for semantic search
+# Embedding model for semantic search
 docker exec -it capturenest-ollama-1 ollama pull nomic-embed-text
 ```
 
@@ -148,45 +153,41 @@ CaptureNest/
 │   │   ├── db/
 │   │   │   └── database.ts    # SQLite init + schema migrations
 │   │   ├── api/routes/
-│   │   │   ├── captureRoutes.ts   # Photo/video capture
-│   │   │   ├── mediaRoutes.ts     # Media CRUD
+│   │   │   ├── entryRoutes.ts     # Journal entry CRUD
 │   │   │   ├── searchRoutes.ts    # AI search
-│   │   │   ├── cameraRoutes.ts    # Camera management
+│   │   │   ├── cameraRoutes.ts    # Camera management (legacy)
 │   │   │   └── settingsRoutes.ts  # App settings + health
 │   │   └── services/
 │   │       ├── ai/
-│   │       │   ├── ollamaService.ts     # Vision model + embeddings
+│   │       │   ├── ollamaService.ts     # Whisper, LLaVA, embeddings
 │   │       │   ├── qdrantService.ts     # Vector storage/search
-│   │       │   └── analysisPipeline.ts  # Orchestration pipeline
+│   │       │   └── analysisPipeline.ts  # Entry processing
 │   │       ├── media/
-│   │       │   ├── mediaService.ts     # File storage + DB
-│   │       │   └── ffmpegService.ts    # Video recording
-│   │       ├── camera/
-│   │       │   └── cameraService.ts    # Camera config CRUD
+│   │       │   ├── entryService.ts      # Entry storage + DB
+│   │       │   └── ffmpegService.ts     # Video handling
 │   │       └── settings/
-│   │           └── settingsService.ts  # Config key-value store
+│   │           └── settingsService.ts   # Config key-value store
 │   ├── Dockerfile
 │   └── package.json
 │
 ├── client/                       # Frontend (React + Vite + Tailwind)
 │   ├── src/
-│   │   ├── main.tsx           # Entry point
-│   │   ├── App.tsx            # Router
-│   │   ├── lib/api.ts         # Typed API client
+│   │   ├── main.tsx              # Entry point
+│   │   ├── App.tsx               # Router
+│   │   ├── lib/api.ts            # Typed API client
 │   │   ├── components/
-│   │   │   └── Layout.tsx     # Sidebar layout
+│   │   │   └── Layout.tsx        # Sidebar layout
 │   │   └── pages/
-│   │       ├── Dashboard.tsx  # Stats + recent captures
-│   │       ├── Camera.tsx     # Live camera + capture
-│   │       ├── Library.tsx    # Media grid browser
-│   │       ├── MediaDetail.tsx # Full viewer + AI metadata
-│   │       ├── Search.tsx     # Natural language search
-│   │       └── Settings.tsx   # Configuration
+│   │       ├── Dashboard.tsx     # Stats + recent entries
+│   │       ├── Journal.tsx       # Create/view entries
+│   │       ├── Timeline.tsx      # Entry timeline
+│   │       ├── Search.tsx        # Natural language search
+│   │       └── Settings.tsx      # Configuration
 │   ├── Dockerfile
 │   └── package.json
 │
-├── docker-compose.yml         # Full deployment stack
-├── LICENSE                    # MIT
+├── docker-compose.yml            # Full deployment stack
+├── LICENSE                       # MIT
 └── README.md
 ```
 
@@ -201,8 +202,9 @@ All settings can be changed in the **Settings** page of the dashboard, or via en
 | `OLLAMA_URL` | `http://ollama:11434` | Ollama server URL |
 | `OLLAMA_MODEL` | `llava` | Vision model for image analysis |
 | `EMBED_MODEL` | `nomic-embed-text` | Embedding model for search |
+| `WHISPER_MODEL` | `whisper` | Speech-to-text model |
 | `QDRANT_URL` | `http://qdrant:6333` | Qdrant server URL |
-| `MEDIA_PATH` | `./media` | Where to store captured files |
+| `MEDIA_PATH` | `./media` | Where to store files |
 | `DB_PATH` | `./capturenest.db` | SQLite database path |
 | `PORT` | `4000` | API server port |
 
@@ -215,15 +217,17 @@ See [docs/API.md](docs/API.md) for full endpoint documentation.
 Quick overview:
 
 ```
-POST /api/capture/image        – Capture still image
-POST /api/capture/video/start  – Start video recording
-POST /api/capture/video/stop   – Stop recording
-GET  /api/media                – List media (paginated)
-GET  /api/media/:id            – Get single media item
-DELETE /api/media/:id          – Delete media
-POST /api/media/:id/reanalyze  – Re-run AI analysis
-POST /api/search               – Natural language search
-GET  /api/settings/health      – Service health check
+POST /api/entries/text       – Create text entry (AI processes immediately)
+POST /api/entries/audio      – Upload audio recording
+POST /api/entries/image      – Upload image
+POST /api/entries/video     – Upload video
+POST /api/entries/document   – Upload document (PDF, DOCX, TXT)
+GET  /api/entries           – List entries (filter by type, tag)
+GET  /api/entries/:id       – Get single entry
+DELETE /api/entries/:id     – Delete entry
+POST /api/entries/:id/reanalyze
+POST /api/search            – Natural language search
+GET  /api/settings/health   – Service health check
 ```
 
 ---
@@ -234,8 +238,9 @@ CaptureNest uses [Ollama](https://ollama.com) to run AI models locally:
 
 | Model | Purpose | Pull command |
 |---|---|---|
-| `llava` | Image analysis, captioning, tagging | `ollama pull llava` |
-| `llava:13b` | Higher quality analysis | `ollama pull llava:13b` |
+| `whisper` | Speech-to-text transcription | `ollama pull whisper` |
+| `llava` | Image understanding, captioning | `ollama pull llava` |
+| `llava:13b` | Higher quality image analysis | `ollama pull llava:13b` |
 | `nomic-embed-text` | Text embeddings for search | `ollama pull nomic-embed-text` |
 
 ---
